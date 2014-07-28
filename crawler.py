@@ -28,16 +28,18 @@ class Crawler:
   def user_agent(self, url):
     html = None
     try:
+        url= urllib2.quote(url, safe='/:')
         req = urllib2.Request(url, None, self.req_header)
         html = urllib2.urlopen(req, None, self.req_timeout)
     except urllib2.URLError as e:
-        print 'urllib2.URLError: ', e.message
+        print 'urllib2.URLError: ', e
+        raise RuntimeError, 'cannot open url'
     except socket.timeout as e:
         if self.retry:
           self.retry -= 1
           self.user_agent(url)
         else:
-          print e.message
+          print e
           return None
 
     return html
@@ -50,6 +52,7 @@ class Crawler:
 
 
   def save_image(self, filename):
+    print 'save_image: ', self.img
     content = self.user_agent(self.img).read()
     with open(filename, 'wb') as image:
       image.write(content)

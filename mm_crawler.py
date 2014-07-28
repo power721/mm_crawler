@@ -60,7 +60,11 @@ class MmImageCrawler(crawler.Crawler):
       return self.imageUrl
 
     next_url = self.soup.find('div', attrs={'class' : 'ShowPage'}) # 分页
-    next_url = list(next_url.children)[2].attrs['href'] # 第二个是下一页链接
+    try:
+      next_url = list(next_url.children)[2].attrs['href'] # 第二个是下一页链接
+    except Exception as e:
+      print 'next_image:', e
+      next_url = None
 
     self.imageUrl = None
     if next_url and next_url[0] != '/': # '/'开始的url是下一组图片链接
@@ -83,8 +87,11 @@ class MmImageCrawler(crawler.Crawler):
   def run(self):
     while self.next_image():
       self.parse(self.imageUrl)
-      self.get_image()
-      self.save_image(self.file_name())
+      try:
+        self.get_image()
+        self.save_image(self.file_name())
+      except Exception as e:
+        print e
 
 
 
@@ -100,6 +107,6 @@ if __name__ == '__main__':
   # mm.image_list()
 
   # baseUrl = 'http://www.22mm.cc/mm/qingliang/'
-  # imageUrl = 'http://www.22mm.cc/mm/qingliang/PiaCPPdPebCamPmai.html'
+  # imageUrl = 'http://www.22mm.cc/mm/qingliang/PiaHPJmHeeePaiemP.html'
   # worker = MmImageCrawler(baseUrl, imageUrl)
   # worker.run()
