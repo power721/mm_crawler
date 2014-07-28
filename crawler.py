@@ -60,6 +60,6 @@ class Crawler:
     with open(filename, 'wb') as image:
       image.write(content)
       Crawler.count += 1
-    print 'save_image(%d): %s  filename: %s'%(Crawler.count, self.img, filename)
+    print 'save_image(%d:%d): %s  filename: %s'%(self.page, Crawler.count, self.img, filename)
 
     return True
