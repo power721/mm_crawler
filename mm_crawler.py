@@ -9,13 +9,11 @@ class MmCrawler(crawler.Crawler):
   '''
   抓取分页里面的图片列表
   '''
-  def __init__(self, imageDir='./pics/'):
-    baseUrl = 'http://www.22mm.cc/mm/qingliang/'
+  def __init__(self, imageDir='./pics/', baseUrl='http://www.22mm.cc/mm/qingliang/'):
     crawler.Crawler.__init__(self, baseUrl)
     self.imageDir = imageDir
     if not os.path.isdir(self.imageDir):
       os.mkdir(self.imageDir)
-      pass # 处理异常
 
   def next_page(self):
     if not self.pageUrl:
@@ -35,6 +33,7 @@ class MmCrawler(crawler.Crawler):
 
   def run(self):
     while self.next_page():
+      print 'pageUrl:', self.pageUrl
       self.parse(self.pageUrl)
       for imageUrl in self.image_list():
         worker = MmImageCrawler(self.baseUrl, imageUrl, self.imageDir)
@@ -51,8 +50,9 @@ class MmImageCrawler(crawler.Crawler):
     self.imageDir = imageDir
     self.re = re.compile('arrayImg\[0\]="(.*?)"')
 
-  def set_url(self, imageUrl):
+  def reset(self, imageUrl):
     self.firstUrl = imageUrl
+    self.imageUrl = ''
 
   def next_image(self):
     if not self.imageUrl:
@@ -64,9 +64,9 @@ class MmImageCrawler(crawler.Crawler):
       next_url = list(next_url.children)[2].attrs['href'] # 第二个是下一页链接
     except Exception as e:
       print 'next_image:', e
-      next_url = None
+      next_url = ''
 
-    self.imageUrl = None
+    self.imageUrl = ''
     if next_url and next_url[0] != '/': # '/'开始的url是下一组图片链接
       self.imageUrl = self.baseUrl + next_url
       return self.imageUrl
@@ -81,7 +81,6 @@ class MmImageCrawler(crawler.Crawler):
     # 网页名字加图片后缀
     filename = self.imageDir + self.imageUrl[self.imageUrl.rindex('/')+1:-5] + self.img[self.img.rindex('.'):]
     filename = os.path.normpath(filename)
-    print 'filename: ', filename
     return filename
 
   def run(self):
@@ -89,7 +88,8 @@ class MmImageCrawler(crawler.Crawler):
       self.parse(self.imageUrl)
       try:
         self.get_image()
-        self.save_image(self.file_name())
+        if not self.save_image(self.file_name()):
+          break
       except Exception as e:
         print e
 
