@@ -12,19 +12,16 @@ class Crawler:
   '''
 
   count = 0
+  maxCount = 0
   def __init__(self, baseUrl):
     self.req_header = {'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'}
     self.req_timeout = 20
     self.retry = 3
-    self.page = 1
-    self.image = 1
-    self.maxCount = 0
     self.baseUrl = baseUrl
     self.pageUrl = ''
     self.imageUrl = ''
     self.imageDir = './'
     self.soup = None
-    pass
 
   def user_agent(self, url):
     html = None
@@ -53,6 +50,9 @@ class Crawler:
 
 
   def save_image(self, filename):
+    if Crawler.maxCount and Crawler.count > Crawler.maxCount:
+      raise StopException
+
     if os.path.exists(filename):
       return False
 
@@ -60,6 +60,10 @@ class Crawler:
     with open(filename, 'wb') as image:
       image.write(content)
       Crawler.count += 1
-    print 'save_image(%d:%d): %s  filename: %s'%(self.page, Crawler.count, self.img, filename)
+    print 'save_image(%d/%d): %s  filename: %s'%(Crawler.count, Crawler.maxCount, self.img, filename)
 
     return True
+
+class StopException(Exception):
+  def __init__(self):
+    Exception.__init__(self, 'Crawler finished.')
