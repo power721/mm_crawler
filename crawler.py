@@ -31,7 +31,7 @@ class Crawler:
         html = urllib2.urlopen(req, None, self.req_timeout)
     except urllib2.URLError as e:
         print 'urllib2.URLError: ', e
-        raise RuntimeError, 'cannot open url: %s'%url
+        raise URLError, 'cannot open url: %s'%url
     except socket.timeout as e:
         if self.retry:
           self.retry -= 1
@@ -67,3 +67,6 @@ class Crawler:
 class StopException(Exception):
   def __init__(self):
     Exception.__init__(self, 'Crawler finished.')
+
+class URLError(Exception):
+  pass

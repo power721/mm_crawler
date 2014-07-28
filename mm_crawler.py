@@ -35,7 +35,7 @@ class MmCrawler(crawler.Crawler):
     try:
       for li in self.soup.find('div', attrs={'class' : 'ShowPage'}).next_sibling.find_all('li'):
         res.append('http://www.22mm.cc' + li.a.attrs['href'])
-    except RuntimeError as e:
+    except (AttributeError, RuntimeError) as e:
       print e
 
     return res
@@ -45,7 +45,17 @@ class MmCrawler(crawler.Crawler):
 
     while self.next_page():
       print 'pageUrl:', self.pageUrl
-      self.parse(self.pageUrl)
+      try:
+        self.parse(self.pageUrl)
+        lastFailed = False
+      except crawler.URLError as e:
+        if lastFailed:
+          break
+        lastFailed = True
+      except RuntimeError as e:
+        print e
+        continue
+
       for imageUrl in self.image_list():
         if pool.finished():
           raise crawler.StopException
@@ -143,7 +153,7 @@ class ThreadPool:
 
 
 if __name__ == '__main__':
-  mm = MmCrawler()
+  mm = MmCrawler(imageDir='/mnt/power/mm_crawler/pics')
   #mm = MmCrawler(maxCount=100)
   mm.run()
 
