@@ -3,10 +3,11 @@
 
 import os
 import re
-import crawler
-import threading
 import time
 import Queue
+import crawler
+import argparse
+import threading
 
 class MmCrawler(crawler.Crawler):
   '''
@@ -82,14 +83,14 @@ class MmImageCrawler(crawler.Crawler, threading.Thread):
       self.imageUrl = self.firstUrl
       return self.imageUrl
 
+    self.imageUrl = ''
     next_url = self.soup.find('div', attrs={'class' : 'ShowPage'}) # 分页
     try:
       next_url = list(next_url.children)[2].attrs['href'] # 第二个是下一页链接
-    except RuntimeError as e:
+    except (RuntimeError, AttributeError) as e:
       print 'next_image:', e
       next_url = ''
 
-    self.imageUrl = ''
     if next_url and next_url[0] != '/': # '/'开始的url是下一组图片链接
       self.imageUrl = self.baseUrl + next_url
       return self.imageUrl
@@ -102,7 +103,7 @@ class MmImageCrawler(crawler.Crawler, threading.Thread):
   def file_name(self):
     print 'imageUrl: ', self.imageUrl
     # 网页名字加图片后缀
-    filename = self.imageDir + self.imageUrl[self.imageUrl.rindex('/')+1:-5] + self.img[self.img.rindex('.'):]
+    filename = self.imageDir + '/' + self.imageUrl[self.imageUrl.rindex('/')+1:-5] + self.img[self.img.rindex('.'):]
     filename = os.path.normpath(filename)
     return filename
 
@@ -116,13 +117,13 @@ class MmImageCrawler(crawler.Crawler, threading.Thread):
         self.get_image()
         if not self.save_image(self.file_name()):
           break
-      except RuntimeError as e:
+      except (RuntimeError, IndexError, AttributeError) as e:
         print e
 
   def run(self):
     while True:
       try:
-        imageUrl = self.workQueue.get(timeout=3)
+        imageUrl = self.workQueue.get(timeout=5)
         self.do_work(imageUrl)
       except Queue.Empty:
         break
@@ -131,6 +132,9 @@ class MmImageCrawler(crawler.Crawler, threading.Thread):
 
 
 class ThreadPool:
+  '''
+  a thread pool which hold work queue and consumer threads
+  '''
   def __init__(self, baseUrl, imageDir, num_of_threads):
     self.workQueue = Queue.Queue()
     self.threads = []
@@ -139,7 +143,7 @@ class ThreadPool:
       self.threads.append(thread)
 
   def wait_all(self):
-    while threading.active_count() > 0:
+    while not self.finished() > 0:
       time.sleep(0.1)
 
   def add_job(self, imageUrl):
@@ -152,18 +156,29 @@ class ThreadPool:
     return True
 
 
+def main():
+  parser = argparse.ArgumentParser()
+  parser.add_argument("-n", "--number", type=int, default=10,
+                      help="number of threads, default as 10")
+  parser.add_argument("-l", "--limit", type=int, default=0,
+                      help="number of max images, 0 means no limitation")
+  parser.add_argument("-o", "--output", default='./pics',
+                      help="images output directory")
+
+  args = parser.parse_args()
+
+  args.number = args.number or 10
+  args.limit = args.limit or 0
+  args.output = args.output or './pics'
+
+  mm = MmCrawler(imageDir=args.output, threads=args.number, maxCount=args.limit)
+  mm.run()  # MmCrawler is not a threading.Thread
+
+
 if __name__ == '__main__':
-  mm = MmCrawler(imageDir='/mnt/power/mm_crawler/pics')
-  #mm = MmCrawler(maxCount=100)
-  mm.run()
+  start_time = time.time()
 
-  #mm.parse('http://www.22mm.cc/mm/qingliang/')
-  # #print mm.soup
-  # mm.image_list()
-  # mm.parse(mm.next_page())
-  # mm.image_list()
-
-  # baseUrl = 'http://www.22mm.cc/mm/qingliang/'
-  # imageUrl = 'http://www.22mm.cc/mm/qingliang/PiaHPJmHeeePaiemP.html'
-  # worker = MmImageCrawler(baseUrl)
-  # worker.run()
+  try:
+    main()
+  finally:
+    print 'Used time:', time.time()-start_time
