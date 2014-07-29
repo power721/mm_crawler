@@ -31,21 +31,20 @@ class Crawler:
         html = urllib2.urlopen(req, None, self.req_timeout)
     except urllib2.URLError as e:
         print 'urllib2.URLError: ', e
-        raise URLError, 'cannot open url: %s'%url
+        raise URLError(url)
     except socket.timeout as e:
         if self.retry:
           self.retry -= 1
           return self.user_agent(url)
         else:
           print e
-          raise RuntimeError, 'cannot open url'
+          raise URLError(url)
 
     return html
 
   def parse(self, url):
     html = self.user_agent(url)
     self.soup = BeautifulSoup(html)
-    #print 'parse url: ', url
     return self.soup
 
 
@@ -64,9 +63,15 @@ class Crawler:
 
     return True
 
+
 class StopException(Exception):
+  '''
+  Crawler's work is finished
+  '''
   def __init__(self):
     Exception.__init__(self, 'Crawler finished.')
 
+
 class URLError(Exception):
-  pass
+  def __init__(self, url):
+    Exception.__init__(self, 'cannot open url: %s'%url)
