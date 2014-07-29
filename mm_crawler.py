@@ -13,8 +13,9 @@ class MmCrawler(crawler.Crawler):
   '''
   抓取分页里面的图片列表
   '''
-  def __init__(self, imageDir='./pics/', baseUrl='http://www.22mm.cc/mm/qingliang/', startPage=1, threads=10, maxCount=0):
-    crawler.Crawler.__init__(self, baseUrl)
+  baseUrl = 'http://www.22mm.cc/mm/'
+  def __init__(self, imageDir='./pics/', category='qingliang', startPage=1, threads=10, maxCount=0):
+    crawler.Crawler.__init__(self, MmCrawler.baseUrl+category+'/')
     self.imageDir = imageDir
     self.page = startPage or 1
     if self.page > 1:
@@ -45,7 +46,8 @@ class MmCrawler(crawler.Crawler):
 
   def run(self):
     pool = ThreadPool(self.baseUrl, self.imageDir, self.threads)
-
+    lastFailed = False
+    
     while self.next_page():
       print 'pageUrl:', self.pageUrl
       try:
@@ -166,6 +168,8 @@ def main():
                       help="number of max images, 0 means no limitation")
   parser.add_argument("-s", "--start", type=int, default=1,
                       help="start page, default as 1")
+  parser.add_argument("-c", "--category", default='ql', choices=['ql', 'jy', 'bg', 'sr'],
+                      help="select a image category")
   parser.add_argument("-o", "--output", default='./pics',
                       help="images output directory")
 
@@ -174,9 +178,10 @@ def main():
   args.number = args.number or 10
   args.limit = args.limit or 0
   args.start = args.start or 1
+  args.category = {'ql':'qingliang', 'jy':'jingyan', 'bg':'bagua', 'sr':'suren'}[args.category] or 'qingliang'
   args.output = args.output or './pics'
 
-  mm = MmCrawler(imageDir=args.output, startPage=args.start, threads=args.number, maxCount=args.limit)
+  mm = MmCrawler(imageDir=args.output, category=args.category, startPage=args.start, threads=args.number, maxCount=args.limit)
   mm.run()  # MmCrawler is not a threading.Thread
 
 
