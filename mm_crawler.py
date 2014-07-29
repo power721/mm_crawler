@@ -17,6 +17,8 @@ class MmCrawler(crawler.Crawler):
     crawler.Crawler.__init__(self, baseUrl)
     self.imageDir = imageDir
     self.page = startPage or 1
+    if self.page > 1:
+      self.pageUrl = 'placeholder'
     self.threads = threads or 10
     crawler.Crawler.maxCount = maxCount
     if not os.path.isdir(self.imageDir):
@@ -162,6 +164,8 @@ def main():
                       help="number of threads, default as 10")
   parser.add_argument("-l", "--limit", type=int, default=0,
                       help="number of max images, 0 means no limitation")
+  parser.add_argument("-s", "--start", type=int, default=1,
+                      help="start page, default as 1")
   parser.add_argument("-o", "--output", default='./pics',
                       help="images output directory")
 
@@ -169,9 +173,10 @@ def main():
 
   args.number = args.number or 10
   args.limit = args.limit or 0
+  args.start = args.start or 1
   args.output = args.output or './pics'
 
-  mm = MmCrawler(imageDir=args.output, threads=args.number, maxCount=args.limit)
+  mm = MmCrawler(imageDir=args.output, startPage=args.start, threads=args.number, maxCount=args.limit)
   mm.run()  # MmCrawler is not a threading.Thread
 
 
