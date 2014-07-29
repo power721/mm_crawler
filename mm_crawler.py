@@ -142,12 +142,12 @@ class ThreadPool:
       thread = MmImageCrawler(baseUrl, imageDir, self.workQueue)
       self.threads.append(thread)
 
+  def add_job(self, imageUrl):
+    self.workQueue.put(imageUrl)
+
   def wait_all(self):
     while not self.finished() > 0:
       time.sleep(0.1)
-
-  def add_job(self, imageUrl):
-    self.workQueue.put(imageUrl)
 
   def finished(self):
     for thread in self.threads:
