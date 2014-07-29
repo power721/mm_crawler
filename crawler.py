@@ -6,15 +6,17 @@ import urllib2
 import socket
 from bs4 import BeautifulSoup
 
+
 class Crawler:
   '''
   a Crawler for images
   '''
-
   count = 0
   maxCount = 0
+
   def __init__(self, baseUrl):
-    self.req_header = {'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'}
+    self.req_header = {'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 6.1;\
+                        en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'}
     self.req_timeout = 20
     self.retry = 3
     self.baseUrl = baseUrl
@@ -59,7 +61,8 @@ class Crawler:
     with open(filename, 'wb') as image:
       image.write(content)
       Crawler.count += 1
-    print 'save_image(%d/%d): %s  filename: %s'%(Crawler.count, Crawler.maxCount, self.img, filename)
+    print 'save_image(%d/%d): %s  filename: %s' \
+          % (Crawler.count, Crawler.maxCount, self.img, filename)
 
     return True
 
@@ -68,10 +71,14 @@ class StopException(Exception):
   '''
   Crawler's work is finished
   '''
+
   def __init__(self):
     Exception.__init__(self, 'Crawler finished.')
 
 
 class URLError(Exception):
+  '''
+  cannot open url
+  '''
   def __init__(self, url):
     Exception.__init__(self, 'cannot open url: %s'%url)
